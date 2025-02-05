@@ -10,6 +10,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.*;
+
 
 /**
  * TODO: You will need to write your own endpoints and handlers for your controller using Spring. The endpoints you will need can be
@@ -20,11 +22,11 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 public class SocialMediaController {
     private final AccountService accountService;
-    // private final MessageService messageService;
+    private final MessageService messageService;
 
-    public SocialMediaController(AccountService accountService) {
+    public SocialMediaController(AccountService accountService, MessageService messageService) {
         this.accountService = accountService;
-        // this.messageService = messageService;
+        this.messageService = messageService;
     }
     // POST /register
     @PostMapping("/register")
@@ -53,14 +55,56 @@ public class SocialMediaController {
     }
     // POST /message
     @PostMapping("/messages")
-    public ResponseEntity<Message> postMessage(@RequestBody Message message) {
-        return null;
+    public ResponseEntity<Message> postMessages(@RequestBody Message message) {
+        try {
+            Message postMessage = messageService.postMessage(message);
+            return ResponseEntity.ok(postMessage);
+
+        } catch(IllegalArgumentException e) {
+            return ResponseEntity.status(400).build();
+        }
     }
 
     // GET all /messages
+    @GetMapping("/messages")
+    public ResponseEntity<List<Message>> getAllMessages() {
+        List<Message> getAllMessages = messageService.getAllMessages(); 
+        return ResponseEntity.ok(getAllMessages);
+    }
     // GET /messages by ID
+    @GetMapping("/messages/{messageId}")
+    public ResponseEntity<Message> getMessagesById(@PathVariable Integer messageId) {
+        Message getMessagesById = messageService.getMessagesById(messageId);
+        return ResponseEntity.ok(getMessagesById);
+    }
     // DELETE /messages/{messageId} by id
+    @DeleteMapping("/messages/{messageId}")
+    public ResponseEntity<Integer> deleteMessageById(@PathVariable Integer messageId) {
+        Integer deletedRows = messageService.deleteMessagesById(messageId);
+        if (deletedRows > 0) {
+            return ResponseEntity.ok(deletedRows);
+        }
+        return ResponseEntity.ok().build();
+    }
     // PATCH /messages/{messageId} by id
+    @PatchMapping("/messages/{messageId}")
+    public ResponseEntity<Integer> patchMessagesById(@PathVariable Integer messageId, @RequestBody Message message) {
+        try {
+            Integer patchedRows = messageService.patchMessagesById(messageId, message.getMessageText());
+            if (patchedRows > 0) {
+                return ResponseEntity.ok(patchedRows);
+            }
+            return ResponseEntity.ok().build();
+
+
+        }catch (IllegalArgumentException e) {
+            return ResponseEntity.status(400).build();
+        }
+    }
     // GET /accounts/{accountId}/messages
+    @GetMapping("/accounts/{accountId}/messages")
+    public ResponseEntity<List<Message>> getAccountMessagesById(@PathVariable Integer accountId) {
+        return ResponseEntity.ok(messageService.getAccountMessagesById(accountId));
+    }
 
 }
